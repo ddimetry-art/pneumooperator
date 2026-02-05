@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система Промышленных Пневмовибраторов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 20px;
+            background-image: url('background-industrial.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .header {
+            position: relative;
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 100;
+            width: 100%;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { text-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50; }
+            50% { text-shadow: 0 0 15px #8BC34A, 0 0 30px #8BC34A; }
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 65vh;
+            max-height: 700px;
+            margin-bottom: 20px;
+        }
+
+        .stats-panel {
+            position: relative;
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.6);
+            z-index: 100;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #8BC34A;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .power-meter-container {
+            width: 280px;
+        }
+
+        .power-meter {
+            width: 100%;
+            height: 25px;
+            background: #333;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            margin-top: 5px;
+        }
+
+        .power-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #FF5252 0%, #FFC107 30%, #4CAF50 70%, #2E7D32 100%);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .power-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 5px black;
+            font-size: 1em;
+        }
+
+        .vibrator-container {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .vibrator-container:hover {
+            transform: scale(1.1);
+            z-index: 60;
+        }
+
+        .vibrator {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .vibrator-label {
+            position: absolute;
+            bottom: -25px;
+            font-size: 0.75em;
+            color: #fff;
+            text-shadow: 0 0 5px black;
+            font-weight: bold;
+        }
+
+        .vibrator.active {
+            animation: vibrate 0.08s infinite;
+            filter: brightness(1.3);
+            box-shadow: 0 0 25px rgba(76, 175, 80, 0.8);
+        }
+
+        @keyframes vibrate {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-2px, -2px); }
+        }
+
+        .vibrator.failed {
+            filter: brightness(0.5) sepia(1) hue-rotate(180deg);
+            animation: none;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .failure-indicator {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #FF5252, #D32F2F);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6em;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 0 25px rgba(255, 82, 82, 0.9);
+            animation: alarm-blink 0.5s infinite;
+            display: none;
+            z-index: 70;
+            border: 3px solid #fff;
+            text-align: center;
+        }
+
+        .vibrator.failed + .failure-indicator {
+            display: block;
+        }
+
+        @keyframes alarm-blink {
+            0%, 100% { box-shadow: 0 0 25px rgba(255, 82, 82, 0.9); transform: translateX(-50%) scale(1); }
+            50% { box-shadow: 0 0 40px rgba(255, 255, 255, 1); transform: translateX(-50%) scale(1.1); }
+        }
+
+        .difficulty-level {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #000;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            z-index: 100;
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.7);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 50px 60px;
+            border-radius: 25px;
+            text-align: center;
+            display: none;
+            z-index: 300;
+            border: 4px solid #FF5252;
+            box-shadow: 0 0 60px rgba(255, 82, 82, 0.7);
+            max-width: 90%;
+            width: 500px;
+        }
+
+        .game-over h2 {
+            font-size: 2.8em;
+            color: #FF5252;
+            margin-bottom: 25px;
+            text-shadow: 0 0 15px rgba(255, 82, 82, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .game-over p {
+            font-size: 1.4em;
+            margin: 12px 0;
+            color: #FFC107;
+            line-height: 1.6;
+        }
+
+        .game-over-stats {
+            margin: 25px 0;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .game-over-stats div {
+            margin: 8px 0;
+            font-size: 1.2em;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.6);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(76, 175, 80, 0.9);
+        }
+
+        .alternative-link {
+            margin-top: 25px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #2196F3;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+        }
+
+        .alternative-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #4CAF50;
+            transform: translateX(5px);
+        }
+
+        .warning-banner {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 82, 82, 0.92);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: none;
+            z-index: 250;
+            animation: banner-blink 1s infinite;
+            box-shadow: 0 0 20px rgba(255, 82, 82, 0.8);
+            border: 2px solid #fff;
+        }
+
+        @keyframes banner-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .startup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.92);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+            backdrop-filter: blur(5px);
+        }
+
+        .startup-overlay h2 {
+            font-size: 2.5em;
+            color: #4CAF50;
+            margin-bottom: 40px;
+            text-shadow: 0 0 25px rgba(76, 175, 80, 0.9);
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .startup-btn {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 25px 80px;
+            font-size: 1.6em;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s;
+            box-shadow: 0 0 40px rgba(76, 175, 80, 0.9);
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .startup-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 60px rgba(76, 175, 80, 1);
+        }
+
+        .startup-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .startup-btn:hover::after {
+            opacity: 1;
+        }
+
+        .startup-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+            padding: 25px 50px;
+            border-radius: 20px;
+            font-size: 2em;
+            font-weight: bold;
+            z-index: 350;
+            box-shadow: 0 0 50px rgba(76, 175, 80, 0.9);
+            display: none;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>⚡ СИСТЕМА ПРОМЫШЛЕННЫХ ПНЕВМОВИБРАТОРОВ ⚡</h1>
+            <div class="difficulty-level" id="difficultyLevel">УРОВЕНЬ: 1</div>
+        </div>
+
+        <div class="game-area" id="gameArea"></div>
+
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-label">Общая мощность</div>
+                <div class="power-meter-container">
+                    <div class="power-meter">
+                        <div class="power-fill" id="powerFill">
+                            <div class="power-text" id="powerText">100%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Время работы</div>
+                <div class="stat-value" id="timeDisplay">00:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Рабочие</div>
+                <div class="stat-value" id="activeCount">20/20</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Аварии</div>
+                <div class="stat-value" id="failureCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Перезапуски</div>
+                <div class="stat-value" id="restartCount">0</div>
+            </div>
+        </div>
+
+        <div class="warning-banner" id="warningBanner">⚠️ КРИТИЧЕСКОЕ ПАДЕНИЕ МОЩНОСТИ! СИСТЕМА ОСТАНОВИТСЯ ЧЕРЕЗ 3 СЕКУНДЫ ⚠️</div>
+
+        <div class="game-over" id="gameOver">
+            <h2>❌ СИСТЕМА ОСТАНОВЛЕНА ❌</h2>
+            <div class="game-over-stats">
+                <div>⏱️ Время работы: <strong id="finalTime">00:00</strong></div>
+                <div>📊 Макс. мощность: <strong id="maxPower">100%</strong></div>
+                <div>🔧 Перезапусков: <strong id="totalRestarts">0</strong></div>
+                <div>📈 Уровень сложности: <strong id="finalDifficulty">1</strong></div>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">🔄 ПЕРЕЗАПУСТИТЬ СИСТЕМУ</button>
+            <div class="alternative-link" id="alternativeLink">Или же есть вариант получше...</div>
+        </div>
+
+        <div class="startup-overlay" id="startupOverlay">
+            <h2>СИСТЕМА ПРОМЫШЛЕННЫХ ВИБРАТОРОВ - РЕЖИМ МОНИТОРИНГА</h2>
+            <button class="startup-btn" onclick="startFullLaunch()">🚀 ЗАПУСТИТЬ СИСТЕМУ</button>
+        </div>
+
+        <div class="startup-message" id="startupMessage">🚀 ПОЛНЫЙ ЗАПУСК СИСТЕМЫ... 🚀</div>
+    </div>
+
+    <script>
+        class Vibrator {
+            constructor(container, label, x, y, imgPath) {
+                this.container = container;
+                this.label = label;
+                this.x = x;
+                this.y = y;
+                this.imgPath = imgPath;
+                this.isActive = true;
+                this.isFailed = false;
+                this.failureTime = null;
+                
+                this.container.style.left = `${x - 40}px`;
+                this.container.style.top = `${y - 40}px`;
+                
+                const vibrator = this.container.querySelector('.vibrator');
+                vibrator.style.backgroundImage = `url('${imgPath}')`;
+                
+                this.container.addEventListener('click', () => this.handleClick());
+            }
+            
+            handleClick() {
+                if (!gameRunning || !this.isFailed) return;
+                
+                this.restart();
+                totalRestarts++;
+                document.getElementById('restartCount').textContent = totalRestarts;
+            }
+            
+            restart() {
+                this.isFailed = false;
+                this.isActive = true;
+                this.failureTime = null;
+                
+                const vibrator = this.container.querySelector('.vibrator');
+                const indicator = this.container.querySelector('.failure-indicator');
+                
+                vibrator.classList.remove('failed');
+                vibrator.classList.add('active');
+                indicator.style.display = 'none';
+            }
+            
+            fail() {
+                this.isFailed = true;
+                this.isActive = false;
+                this.failureTime = Date.now();
+                
+                const vibrator = this.container.querySelector('.vibrator');
+                const indicator = this.container.querySelector('.failure-indicator');
+                
+                vibrator.classList.remove('active');
+                vibrator.classList.add('failed');
+                indicator.style.display = 'block';
+            }
+            
+            isWorking() {
+                return this.isActive && !this.isFailed;
+            }
+        }
+
+        let vibrators = [];
+        let gameRunning = false;
+        let gameTime = 0;
+        let lastTime = 0;
+        let totalPower = 100;
+        let gameOverTimer = null;
+        let failureCheckInterval = null;
+        let totalRestarts = 0;
+        let maxPowerAchieved = 100;
+        let currentDifficulty = 1;
+        let failureRate = 0.035; // 3.5% chance per second per vibrator (increased from 2%)
+        let maxFailures = 5; // Maximum simultaneous failures (increased from 3)
+
+        function generateRandomPositions(count, gameArea) {
+            const positions = [];
+            const gameAreaRect = gameArea.getBoundingClientRect();
+            const areaWidth = gameAreaRect.width;
+            const areaHeight = gameAreaRect.height;
+            
+            const minDistance = 100; // Minimum distance between vibrators
+            
+            while (positions.length < count) {
+                const x = Math.random() * (areaWidth - 100) + 50;
+                const y = Math.random() * (areaHeight - 100) + 50;
+                
+                // Check distance from existing positions
+                let tooClose = false;
+                for (const pos of positions) {
+                    const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+                    if (distance < minDistance) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                
+                if (!tooClose) {
+                    positions.push({
+                        x: Math.round(x),
+                        y: Math.round(y),
+                        img: `pv${positions.length + 1}.png`
+                    });
+                }
+            }
+            
+            return positions;
+        }
+
+        function createVibrators() {
+            const gameArea = document.getElementById('gameArea');
+            const positions = generateRandomPositions(20, gameArea); // 20 vibrators
+            
+            positions.forEach((pos, index) => {
+                const container = document.createElement('div');
+                container.className = 'vibrator-container';
+                
+                const vibrator = document.createElement('div');
+                vibrator.className = 'vibrator active';
+                
+                const label = document.createElement('div');
+                label.className = 'vibrator-label';
+                label.textContent = `PV-${index + 1}`;
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'failure-indicator';
+                indicator.textContent = '!';
+                indicator.style.textAlign = 'center'; // Center the exclamation mark
+                
+                container.appendChild(vibrator);
+                container.appendChild(label);
+                container.appendChild(indicator);
+                gameArea.appendChild(container);
+                
+                vibrators.push(new Vibrator(container, `PV-${index + 1}`, pos.x, pos.y, pos.img));
+            });
+        }
+
+        function calculateTotalPower() {
+            const workingCount = vibrators.filter(v => v.isWorking()).length;
+            return Math.round((workingCount / vibrators.length) * 100);
+        }
+
+        function updateStats() {
+            const workingCount = vibrators.filter(v => v.isWorking()).length;
+            const failedCount = vibrators.filter(v => v.isFailed).length;
+            
+            document.getElementById('activeCount').textContent = `${workingCount}/20`;
+            document.getElementById('failureCount').textContent = failedCount;
+            
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = Math.floor(gameTime % 60);
+            document.getElementById('timeDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            maxPowerAchieved = Math.max(maxPowerAchieved, totalPower);
+            document.getElementById('maxPower').textContent = `${maxPowerAchieved}%`;
+        }
+
+        function checkPowerLevel() {
+            const warningBanner = document.getElementById('warningBanner');
+            
+            if (totalPower < 70) {
+                warningBanner.style.display = 'block';
+                
+                if (!gameOverTimer) {
+                    gameOverTimer = setTimeout(() => {
+                        endGame();
+                    }, 3000);
+                }
+            } else {
+                warningBanner.style.display = 'none';
+                if (gameOverTimer) {
+                    clearTimeout(gameOverTimer);
+                    gameOverTimer = null;
+                }
+            }
+        }
+
+        function checkFailures() {
+            if (!gameRunning) return;
+            
+            const workingVibrators = vibrators.filter(v => v.isWorking());
+            const currentFailures = vibrators.filter(v => v.isFailed).length;
+            
+            // Don't create more failures if we're at max
+            if (currentFailures >= maxFailures) return;
+            
+            // Random chance for each working vibrator to fail
+            workingVibrators.forEach(vibrator => {
+                if (Math.random() < failureRate) {
+                    vibrator.fail();
+                }
+            });
+            
+            // Increase difficulty over time
+            updateDifficulty();
+        }
+
+        function updateDifficulty() {
+            const minutes = Math.floor(gameTime / 60);
+            // Increase difficulty every minute (was every 2 minutes)
+            const newDifficulty = Math.min(15, Math.floor(minutes) + 1);
+            
+            if (newDifficulty > currentDifficulty) {
+                currentDifficulty = newDifficulty;
+                // Faster increase in failure rate
+                failureRate = 0.035 + (currentDifficulty - 1) * 0.025;
+                // More simultaneous failures allowed
+                maxFailures = Math.min(15, 5 + Math.floor((currentDifficulty - 1) * 1.5));
+                
+                document.getElementById('difficultyLevel').textContent = `УРОВЕНЬ: ${currentDifficulty}`;
+                document.getElementById('difficultyLevel').style.background = 
+                    currentDifficulty >= 10 ? 'rgba(255, 82, 82, 0.9)' : 
+                    currentDifficulty >= 6 ? 'rgba(255, 82, 82, 0.7)' : 
+                    currentDifficulty >= 3 ? 'rgba(255, 193, 7, 0.9)' : 'rgba(255, 193, 7, 0.9)';
+            }
+        }
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(failureCheckInterval);
+            
+            const gameOver = document.getElementById('gameOver');
+            const finalTime = document.getElementById('finalTime');
+            
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = Math.floor(gameTime % 60);
+            finalTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('maxPower').textContent = `${maxPowerAchieved}%`;
+            document.getElementById('totalRestarts').textContent = totalRestarts;
+            document.getElementById('finalDifficulty').textContent = currentDifficulty;
+            
+            gameOver.style.display = 'block';
+            
+            // Деактивируем все вибраторы
+            vibrators.forEach(vib => {
+                if (vib.isWorking()) {
+                    vib.container.querySelector('.vibrator').classList.remove('active');
+                }
+            });
+        }
+
+        function restartGame() {
+            gameRunning = false;
+            gameTime = 0;
+            totalPower = 100;
+            totalRestarts = 0;
+            maxPowerAchieved = 100;
+            currentDifficulty = 1;
+            failureRate = 0.035;
+            maxFailures = 5;
+            
+            document.getElementById('warningBanner').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('startupOverlay').style.display = 'flex';
+            document.getElementById('difficultyLevel').textContent = `УРОВЕНЬ: 1`;
+            document.getElementById('difficultyLevel').style.background = 'rgba(255, 193, 7, 0.9)';
+            
+            if (gameOverTimer) {
+                clearTimeout(gameOverTimer);
+                gameOverTimer = null;
+            }
+            
+            if (failureCheckInterval) {
+                clearInterval(failureCheckInterval);
+                failureCheckInterval = null;
+            }
+            
+            vibrators.forEach(vib => {
+                vib.isActive = false;
+                vib.isFailed = false;
+                const vibrator = vib.container.querySelector('.vibrator');
+                const indicator = vib.container.querySelector('.failure-indicator');
+                vibrator.classList.remove('active', 'failed');
+                indicator.style.display = 'none';
+            });
+            
+            // Clear and recreate vibrators with new random positions
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+            vibrators = [];
+            createVibrators();
+        }
+
+        function startFullLaunch() {
+            document.getElementById('startupOverlay').style.display = 'none';
+            document.getElementById('startupMessage').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('startupMessage').style.display = 'none';
+                gameRunning = true;
+                
+                // Полный запуск всех вибраторов
+                vibrators.forEach(vib => {
+                    vib.isActive = true;
+                    vib.isFailed = false;
+                    const vibrator = vib.container.querySelector('.vibrator');
+                    vibrator.classList.add('active');
+                });
+                
+                // Start failure checking (every 1.5 seconds instead of 2)
+                failureCheckInterval = setInterval(checkFailures, 1500);
+                
+                lastTime = performance.now();
+                requestAnimationFrame(gameLoop);
+            }, 1500);
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+            
+            if (gameRunning) {
+                gameTime += deltaTime;
+                
+                totalPower = calculateTotalPower();
+                
+                const powerFill = document.getElementById('powerFill');
+                const powerText = document.getElementById('powerText');
+                
+                powerFill.style.width = `${totalPower}%`;
+                powerText.textContent = `${totalPower}%`;
+                
+                // Изменение цвета в зависимости от мощности
+                if (totalPower > 70) {
+                    powerFill.style.background = 'linear-gradient(90deg, #4CAF50, #2E7D32)';
+                } else if (totalPower > 40) {
+                    powerFill.style.background = 'linear-gradient(90deg, #FFC107, #FF9800)';
+                } else {
+                    powerFill.style.background = 'linear-gradient(90deg, #FF5252, #D32F2F)';
+                }
+                
+                updateStats();
+                checkPowerLevel();
+                
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Alternative link handler - redirect to automation controllers page
+        document.getElementById('alternativeLink').addEventListener('click', function() {
+            window.location.href = 'https://rusautomation.ru/catalog/s/kontrollery_upravleniya/';
+        });
+
+        // Инициализация игры
+        window.addEventListener('load', () => {
+            createVibrators();
+        });
+    </script>
+</body>
+</html>
