@@ -562,6 +562,30 @@
         let failureRate = 0.04;
         let maxFailures = 6;
 
+        // Новые названия пневмовибраторов
+        const vibratorNames = [
+            "Бункер цемента",
+            "Силос гречихи",
+            "Воронка доломита",
+            "Желоб золы",
+            "Фильтр-циклон",
+            "Отсев щебня",
+            "Лоток опилок",
+            "Биг-бэг выгрузка",
+            "Конус шлака",
+            "Течка гипса",
+            "Рукав фильтра",
+            "Дозатор муки",
+            "Патрубок извести",
+            "Камера пыли",
+            "Шнек опреснителя",
+            "Козырёк кокса",
+            "Затвор клинкера",
+            "Яйцетряс инкубатора",
+            "Секция агломерата",
+            "Карман угля"
+        ];
+
         function generateRandomPositions(count, gameArea) {
             const positions = [];
             const gameAreaRect = gameArea.getBoundingClientRect();
@@ -608,7 +632,7 @@
                 
                 const label = document.createElement('div');
                 label.className = 'vibrator-label';
-                label.textContent = `PV-${index + 1}`;
+                label.textContent = vibratorNames[index]; // Используем новое название
                 
                 const indicator = document.createElement('div');
                 indicator.className = 'failure-indicator';
@@ -620,10 +644,10 @@
                 container.appendChild(indicator);
                 gameArea.appendChild(container);
                 
-                vibrators.push(new Vibrator(container, `PV-${index + 1}`, pos.x, pos.y, pos.img));
+                vibrators.push(new Vibrator(container, vibratorNames[index], pos.x, pos.y, pos.img));
             });
             
-            updateStats(); // Инициализация счетчиков
+            updateStats();
         }
 
         function calculateTotalPower() {
@@ -635,22 +659,18 @@
             const workingCount = vibrators.filter(v => v.isWorking()).length;
             const failedCount = vibrators.filter(v => v.isFailed).length;
             
-            // Обновляем счетчики
             document.getElementById('activeCount').textContent = `${workingCount}/20`;
             document.getElementById('failureCount').textContent = failedCount;
             document.getElementById('restartCount').textContent = totalRestarts;
             
-            // Обновляем время
             const minutes = Math.floor(gameTime / 60);
             const seconds = Math.floor(gameTime % 60);
             document.getElementById('timeDisplay').textContent = 
                 `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            // Обновляем максимальную мощность
             maxPowerAchieved = Math.max(maxPowerAchieved, totalPower);
             document.getElementById('maxPower').textContent = `${maxPowerAchieved}%`;
             
-            // Обновляем индикатор мощности
             document.getElementById('powerText').textContent = `${totalPower}%`;
             document.getElementById('powerFill').style.width = `${totalPower}%`;
         }
@@ -809,10 +829,8 @@
             if (gameRunning) {
                 gameTime += deltaTime;
                 
-                // Сначала пересчитываем мощность
                 totalPower = calculateTotalPower();
                 
-                // Обновляем цвет индикатора мощности
                 const powerFill = document.getElementById('powerFill');
                 if (totalPower > 70) {
                     powerFill.style.background = 'linear-gradient(90deg, #4CAF50, #2E7D32)';
@@ -822,10 +840,7 @@
                     powerFill.style.background = 'linear-gradient(90deg, #FF5252, #D32F2F)';
                 }
                 
-                // Обновляем все счетчики
                 updateStats();
-                
-                // Проверяем уровень мощности
                 checkPowerLevel();
                 
                 requestAnimationFrame(gameLoop);
