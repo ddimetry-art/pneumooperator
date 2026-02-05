@@ -516,8 +516,6 @@
                 if (!gameRunning || !this.isFailed) return;
                 
                 this.restart();
-                totalRestarts++;
-                document.getElementById('restartCount').textContent = totalRestarts;
             }
             
             restart() {
@@ -561,8 +559,8 @@
         let totalRestarts = 0;
         let maxPowerAchieved = 100;
         let currentDifficulty = 1;
-        let failureRate = 0.04; // 4% chance per second per vibrator (increased from 3.5%)
-        let maxFailures = 6; // Maximum simultaneous failures (increased from 5)
+        let failureRate = 0.04;
+        let maxFailures = 6;
 
         function generateRandomPositions(count, gameArea) {
             const positions = [];
@@ -570,13 +568,12 @@
             const areaWidth = gameAreaRect.width;
             const areaHeight = gameAreaRect.height;
             
-            const minDistance = 90; // Minimum distance between vibrators
+            const minDistance = 90;
             
             while (positions.length < count) {
                 const x = Math.random() * (areaWidth - 100) + 50;
                 const y = Math.random() * (areaHeight - 100) + 50;
                 
-                // Check distance from existing positions
                 let tooClose = false;
                 for (const pos of positions) {
                     const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
@@ -600,7 +597,7 @@
 
         function createVibrators() {
             const gameArea = document.getElementById('gameArea');
-            const positions = generateRandomPositions(20, gameArea); // 20 vibrators
+            const positions = generateRandomPositions(20, gameArea);
             
             positions.forEach((pos, index) => {
                 const container = document.createElement('div');
@@ -625,6 +622,8 @@
                 
                 vibrators.push(new Vibrator(container, `PV-${index + 1}`, pos.x, pos.y, pos.img));
             });
+            
+            updateStats(); // Инициализация счетчиков
         }
 
         function calculateTotalPower() {
@@ -636,16 +635,24 @@
             const workingCount = vibrators.filter(v => v.isWorking()).length;
             const failedCount = vibrators.filter(v => v.isFailed).length;
             
+            // Обновляем счетчики
             document.getElementById('activeCount').textContent = `${workingCount}/20`;
             document.getElementById('failureCount').textContent = failedCount;
+            document.getElementById('restartCount').textContent = totalRestarts;
             
+            // Обновляем время
             const minutes = Math.floor(gameTime / 60);
             const seconds = Math.floor(gameTime % 60);
             document.getElementById('timeDisplay').textContent = 
                 `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
+            // Обновляем максимальную мощность
             maxPowerAchieved = Math.max(maxPowerAchieved, totalPower);
             document.getElementById('maxPower').textContent = `${maxPowerAchieved}%`;
+            
+            // Обновляем индикатор мощности
+            document.getElementById('powerText').textContent = `${totalPower}%`;
+            document.getElementById('powerFill').style.width = `${totalPower}%`;
         }
 
         function checkPowerLevel() {
@@ -674,38 +681,35 @@
             const workingVibrators = vibrators.filter(v => v.isWorking());
             const currentFailures = vibrators.filter(v => v.isFailed).length;
             
-            // Don't create more failures if we're at max
             if (currentFailures >= maxFailures) return;
             
-            // Random chance for each working vibrator to fail
+            let failuresThisTick = 0;
+            
             workingVibrators.forEach(vibrator => {
-                if (Math.random() < failureRate) {
+                if (Math.random() < failureRate && failuresThisTick < 3) {
                     vibrator.fail();
+                    failuresThisTick++;
                 }
             });
             
-            // Increase difficulty over time
             updateDifficulty();
         }
 
         function updateDifficulty() {
             const seconds = Math.floor(gameTime);
-            // Increase difficulty every 30 seconds (was every 60 seconds)
             const newDifficulty = Math.min(20, Math.floor(seconds / 30) + 1);
             
             if (newDifficulty > currentDifficulty) {
                 currentDifficulty = newDifficulty;
-                // Faster increase in failure rate
                 failureRate = 0.04 + (currentDifficulty - 1) * 0.035;
-                // More simultaneous failures allowed
                 maxFailures = Math.min(18, 6 + Math.floor((currentDifficulty - 1) * 1.8));
                 
                 document.getElementById('difficultyLevel').textContent = `УРОВЕНЬ: ${currentDifficulty}`;
                 document.getElementById('difficultyLevel').style.background = 
-                    currentDifficulty >= 15 ? 'rgba(255, 0, 0, 0.95)' : // Deep red
-                    currentDifficulty >= 10 ? 'rgba(255, 82, 82, 0.9)' :  // Red
-                    currentDifficulty >= 7 ? 'rgba(255, 140, 0, 0.9)' :  // Orange
-                    currentDifficulty >= 4 ? 'rgba(255, 193, 7, 0.9)' :  // Yellow
+                    currentDifficulty >= 15 ? 'rgba(255, 0, 0, 0.95)' :
+                    currentDifficulty >= 10 ? 'rgba(255, 82, 82, 0.9)' : 
+                    currentDifficulty >= 7 ? 'rgba(255, 140, 0, 0.9)' : 
+                    currentDifficulty >= 4 ? 'rgba(255, 193, 7, 0.9)' : 
                     'rgba(255, 193, 7, 0.9)';
             }
         }
@@ -727,7 +731,6 @@
             
             gameOver.style.display = 'block';
             
-            // Деактивируем все вибраторы
             vibrators.forEach(vib => {
                 if (vib.isWorking()) {
                     vib.container.querySelector('.vibrator').classList.remove('active');
@@ -770,7 +773,6 @@
                 indicator.style.display = 'none';
             });
             
-            // Clear and recreate vibrators with new random positions
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = '';
             vibrators = [];
@@ -785,7 +787,6 @@
                 document.getElementById('startupMessage').style.display = 'none';
                 gameRunning = true;
                 
-                // Полный запуск всех вибраторов
                 vibrators.forEach(vib => {
                     vib.isActive = true;
                     vib.isFailed = false;
@@ -793,7 +794,6 @@
                     vibrator.classList.add('active');
                 });
                 
-                // Start failure checking (every 1.2 seconds for faster pace)
                 failureCheckInterval = setInterval(checkFailures, 1200);
                 
                 lastTime = performance.now();
@@ -809,15 +809,11 @@
             if (gameRunning) {
                 gameTime += deltaTime;
                 
+                // Сначала пересчитываем мощность
                 totalPower = calculateTotalPower();
                 
+                // Обновляем цвет индикатора мощности
                 const powerFill = document.getElementById('powerFill');
-                const powerText = document.getElementById('powerText');
-                
-                powerFill.style.width = `${totalPower}%`;
-                powerText.textContent = `${totalPower}%`;
-                
-                // Изменение цвета в зависимости от мощности
                 if (totalPower > 70) {
                     powerFill.style.background = 'linear-gradient(90deg, #4CAF50, #2E7D32)';
                 } else if (totalPower > 40) {
@@ -826,19 +822,26 @@
                     powerFill.style.background = 'linear-gradient(90deg, #FF5252, #D32F2F)';
                 }
                 
+                // Обновляем все счетчики
                 updateStats();
+                
+                // Проверяем уровень мощности
                 checkPowerLevel();
                 
                 requestAnimationFrame(gameLoop);
             }
         }
 
-        // Alternative link handler - redirect to automation controllers page
         document.getElementById('alternativeLink').addEventListener('click', function() {
             window.location.href = 'https://rusautomation.ru/catalog/s/kontrollery_upravleniya/';
         });
 
-        // Инициализация игры
+        document.getElementById('gameArea').addEventListener('click', function(e) {
+            if (gameRunning && e.target.closest('.vibrator-container')) {
+                totalRestarts++;
+            }
+        }, true);
+
         window.addEventListener('load', () => {
             createVibrators();
         });
